@@ -1,0 +1,45 @@
+data_train_path: "src/data/hepatitis_train.pkl"  # Replace with your file path
+data_test_path: "src/data/hepatitis_test.pkl"
+config_file_path: "src/config/model/hepatitis.yaml"
+attribute_names:
+  - "TARGET"  # Target (DIE=1, LIVE=2)
+  - "Age"
+  - "Sex"
+  - "Steroid"
+  - "Antivirals"
+  - "Fatigue"
+  - "Malaise"
+  - "Anorexia"
+  - "Liver Big"
+  - "Liver Firm"
+  - "Spleen Palpable"
+  - "Spiders"
+  - "Ascites"
+  - "Varices"
+  - "Bilirubin"
+  - "Alk Phosphate"
+  - "SGOT"
+  - "Albumin"
+  - "Protime"
+  - "Histology"
+label_name: "TARGET"
+categorical_attr_names:
+  - "Sex"
+binary_attr_names:
+  - "Steroid"
+  - "Antivirals"
+  - "Fatigue"
+  - "Malaise"
+  - "Anorexia"
+  - "Liver Big"
+  - "Liver Firm"
+  - "Spleen Palpable"
+  - "Spiders"
+  - "Ascites"
+  - "Varices"
+  - "Histology"
+sparse_attr_names: null
+label_true: 2
+label_false: 1
+attr_true: 2
+attr_false: 1

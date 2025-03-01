@@ -1,0 +1,16 @@
+data_train_path: "src/data/haberman_train.pkl"  # Replace with your file path
+data_test_path: "src/data/haberman_test.pkl"
+config_file_path: "src/config/model/haberman.yaml"
+attribute_names:
+  - "Age"
+  - "Year_of_operation"
+  - "Number_of_positive_axillary_nodes_detected"
+  - "TARGET"
+label_name: "TARGET"
+categorical_attr_names: null
+binary_attr_names: null
+sparse_attr_names: null
+label_true: 2
+label_false: 1
+attr_true: null
+attr_false: null

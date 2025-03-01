@@ -1,0 +1,45 @@
+data_train_path: "src/data/wdbc_train.pkl"  # Replace with your file path
+data_test_path: "src/data/wdbc_test.pkl"
+config_file_path: "src/config/model/wdbc.yaml"
+attribute_names:
+  - "ID"
+  - "TARGET"
+  - "Radius_mean"
+  - "Texture_mean"
+  - "Perimeter_mean"
+  - "Area_mean"
+  - "Smoothness_mean"
+  - "Compactness_mean"
+  - "Concavity_mean"
+  - "Concave_points_mean"
+  - "Symmetry_mean"
+  - "Fractal_dimension_mean"
+  - "Radius_se"
+  - "Texture_se"
+  - "Perimeter_se"
+  - "Area_se"
+  - "Smoothness_se"
+  - "Compactness_se"
+  - "Concavity_se"
+  - "Concave_points_se"
+  - "Symmetry_se"
+  - "Fractal_dimension_se"
+  - "Radius_worst"
+  - "Texture_worst"
+  - "Perimeter_worst"
+  - "Area_worst"
+  - "Smoothness_worst"
+  - "Compactness_worst"
+  - "Concavity_worst"
+  - "Concave_points_worst"
+  - "Symmetry_worst"
+  - "Fractal_dimension_worst"
+label_name: "TARGET"
+categorical_attr_names: null
+binary_attr_names: null
+sparse_attr_names:
+  - "ID"
+label_true: M
+label_false: B
+attr_true: null
+attr_false: null

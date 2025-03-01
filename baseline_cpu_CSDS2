@@ -1,0 +1,11 @@
+#!/bin/bash
+#BSUB -o /home/research/jizhou.huang/projects/data-analysis-project/src/log/base_CSDS2.%J
+#BSUB -u huang.jizhou@wustl.edu
+#BSUB -R '(!gpu)'
+#BSUB -R "rusage[mem=32]"
+#BSUB -a 'docker(hliucola/gracker)' /bin/true
+#BSUB -N
+#BSUB -W 100:00
+#BSUB -J base_CSDS2
+#source ...
+python -m src.main_baseline --data_name CSDS2
