@@ -21,9 +21,9 @@ def main(data_name: str):
     data_test_path = "".join(["src/data/csv/", data_name, "_test.csv"])
 
     config_file_path = "".join(["src/config/model/", data_name, ".yaml"])
-    # config_file_path = "src/config/model/model_toy.yaml"
+    config_file_path = "src/config/model/model_toy.yaml"
 
-    num_experiment = 50
+    num_experiment = 2
     sparse_errs = []
     cond_errs_wo = []
     cond_errs = []
