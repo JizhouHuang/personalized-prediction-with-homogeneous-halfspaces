@@ -5,7 +5,7 @@ from tqdm import tqdm
 from typing import List, Tuple
 from ..utils.data import TransformedDataset
 from ..utils.simple_models import LinearModel, ConditionalLinearModel
-from .projected_sgd import SelectorPerceptron
+from .cpgd import SelectorPerceptron
 
 class ConditionalLearnerForFiniteClass(nn.Module):
     """

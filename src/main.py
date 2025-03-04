@@ -6,7 +6,7 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 from tabulate import tabulate
-from .experiments.experiment_ccsc import ExperimentCCSC
+from .experiments.experiment import ExperimentCCSC
 
 def main(data_name: str):
 
