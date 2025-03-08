@@ -2,7 +2,7 @@ num_sample_rll: 64
 margin: 0.0001
 sparsity: 2
 cluster_size: 32768
-data_frac_psgd: 0.7
-lr_coeff: 1.0
+train_subset_fracs: [0.67]
+lr: 1.0
 num_iter: 4096
 batch_size: 192

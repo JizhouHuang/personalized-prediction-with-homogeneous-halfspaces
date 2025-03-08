@@ -5,11 +5,11 @@ from typing import Union, Tuple, List
 from tqdm import tqdm
 from tabulate import tabulate
 from torch.utils.data import DataLoader
-from ..utils.data import TransformedDataset
-from ..models.personalized_learner import ConditionalLearnerForFiniteClass
+from ..utils.data import MultiLabelledDataset
+from ..models.reference_class import ReferenceClass
 from ..models.robust_list_learner import RobustListLearner
 from ..models.baseline_learner import SVMLearner
-from ..utils.simple_models import ConditionalLinearModel
+from ..utils.simple_models import LinearModel
 
 
 class ExperimentCCSC(nn.Module):
@@ -55,8 +55,8 @@ class ExperimentCCSC(nn.Module):
         self.margin = config['margin']
         self.sparsity = config['sparsity']
         self.cluster_size = config['cluster_size']
-        self.data_frac_psgd = config['data_frac_psgd']
-        self.lr_coeff = config['lr_coeff']
+        self.train_subset_fracs = config['train_subset_fracs']
+        self.lr = config['lr']
         self.num_iter = config['num_iter']
         self.batch_size = config['batch_size']
         self.eid = experiment_id
@@ -93,104 +93,143 @@ class ExperimentCCSC(nn.Module):
             device=self.device
         )
 
-        sparse_classifier_clusters: List[ConditionalLinearModel] = robust_list_learner(
+        sparse_classifier_clusters: List[LinearModel] = robust_list_learner(
             DataLoader(
-                TransformedDataset(
+                MultiLabelledDataset(
                     data_train, 
                     # random_state=42
                 ),
                 batch_size=self.num_sample_rll
             )
-        )   # List[ConditionalLinearModel]
-
+        )   # List[LinearModel]
 
         # Perform conditional learning
         print(" ".join([self.header, "initializing conditional classification learner for homogeneous halfspaces ..."]))
-        conditional_learner = ConditionalLearnerForFiniteClass(
+        conditional_learner = ReferenceClass(
             prev_header=self.header + ">",
-            dim_sample = data_train.shape[1] - 1,
+            dataset = MultiLabelledDataset(
+                data=data_train,
+                predictor=sparse_classifier_clusters[0]
+            ),
+            subset_fracs=self.train_subset_fracs, 
             num_iter=self.num_iter, 
-            lr_coeff=self.lr_coeff, 
-            sample_size_psgd=int(data_train.shape[0] * self.data_frac_psgd), 
-            batch_size=self.batch_size,
+            lr=self.lr, 
             device=self.device
         )
 
-        conditional_classifier: ConditionalLinearModel = conditional_learner(
-            dataset = TransformedDataset(data_train),
-            classifier_clusters=sparse_classifier_clusters
-        )   # Tuple[torch.Tensor, torch.Tensor]
+        # generate random observations
+        observations = self.random_observation(
+            length=data_train.size(-1) - 1
+        )   # [2, dim sample]
 
-        # fitting a SVM on the selector
-        print(f"{self.header} fitting SVM on the best selector ...")
-        svm_classifier = ConditionalLinearModel(
-            seletor_weights=conditional_classifier.selector.weights.clone(),
-            predictor=SVMLearner(device=self.device),
-            device=self.device
-        )
-        try:
-            svm_classifier.predictor.train(
-                svm_classifier.select_data(
-                    X=data_train[:, 1:],
-                    y=data_train[:, 0]
-                )
-            )
-            error_svm = svm_classifier.conditional_error_rate(
-                X=data_test[:, 1:],
-                y=data_test[:, 0]
-            )
-        except ValueError:
-            error_svm = 0
+        # repeat observation interleavely to match the number of predictors,
+        # and wrap it into a linear model
+        observations=observations.unsqueeze(1).repeat(
+            1,
+            sparse_classifier_clusters[0].size(0), 
+            1
+        )   # [num observations, num predictors, dim sample]
+
+        print(f"{self.header} observations size: {observations.size()}\n")
+
+        # learn reference class with label mapping
+        eval_errors, eval_ids, selectors = conditional_learner(
+            observations=observations,
+        )   # Tuple[torch.Tensor, torch.Tensor, LinearModel]
+
+        print(f"{self.header} learned selectors (after selecting) size: {selectors.size()}\n")
+        
+        init_weights_ids = torch.argmin(eval_errors)
+        predictor: LinearModel = sparse_classifier_clusters[0].reduce(eval_ids[init_weights_ids])
+        selectors: LinearModel = selectors.reduce(init_weights_ids)
+        print(f"{self.header} result predictor size: {predictor.size()}\n")
+        print(f"{self.header} reuslt selector size: {selectors.size()}\n")
+
+        # map the labels in test data according to the selected predictor
+        labels_test, features_test = MultiLabelledDataset(
+            data=data_test,
+            predictor=predictor
+        )[:]
+
+        print(f"{self.header} testing dataset feature size: {features_test.size()}")
+        print(f"{self.header} testing dataset label size: {labels_test.size()}")
 
         # model selection for sparse classifiers based on regular classification error
         print(" ".join([self.header, "finding empirical error minimizer from sparse perceptrons ..."]))
-        eem_classifier, min_error = None, 1
-        # for classifiers in tqdm(
-        #     sparse_classifier_clusters, 
-        #     total=len(sparse_classifier_clusters), 
-        #     desc=f"{self.header} find EEM",
-        #     leave=False
-        # ):
-        for classifiers in sparse_classifier_clusters:
-            error_rate, index = torch.min(
-                classifiers.predictor.error_rate(
-                    X=data_test[:, 1:],
-                    y=data_test[:, 0]
-                ), 
-                dim=0
-            )
-            if error_rate < min_error:
-                min_error = error_rate
-                eem_classifier = classifiers.predictor[index].to_dense()
+        min_error, _ = torch.min(
+            sparse_classifier_clusters[0].error_rate(
+                X=features_test,
+                y=data_test[:, 0]
+            ), 
+            dim=0
+        )
+
+        print(f"{self.header} best regular sparse classifier error rate: {min_error}")
         
         # Estimate error measures with selectors
-        error_wo = conditional_classifier.predictor.error_rate(
-            X=data_test[:, 1:],
+        error_wo = predictor.error_rate(
+            X=features_test,
             y=data_test[:, 0]
         )
 
-        error = conditional_classifier.conditional_error_rate(
-            X=data_test[:, 1:],
-            y=data_test[:, 0]
+        error = selectors.conditional_one_rate(
+            X=features_test,
+            y=labels_test
         )     
 
-        coverage = conditional_classifier.selector.prediction_rate(X=data_test[:, 1:])
+        coverage = selectors.prediction_rate(X=features_test)
+        print(f"{self.header} result conditional error and coverage: {error, coverage}")
 
         res = [
-            (eem_classifier, float(min_error)),
-            (conditional_classifier.predictor[...], float(error_wo)),
-            (conditional_classifier, (float(error), float(coverage))),
-            (svm_classifier, (float(error_svm), float(coverage)))
+            float(min_error),
+            float(error_wo),
+            float(error), 
+            float(coverage)
         ]
         
         # Print the results in a table format
         table = [
             ["Classifier Type", "Train Size", "Test Size", "Sample Dim", "Sparsity", "PSGD Iter", "Batch Size", "LR Coeff", "Est ER", "Coverage"],
-            ["Classic Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr_coeff, min_error, 1],
-            ["Cond Sparse w/o Selector", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr_coeff, error_wo, 1],
-            ["Cond Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr_coeff, error, coverage],
-            ["Cond SVM", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr_coeff, error_svm, coverage]
+            ["Classic Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr, min_error, 1],
+            ["Cond Sparse w/o Selector", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr, error_wo, 1],
+            ["Cond Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.batch_size, self.lr, error, coverage]
         ]
         print(tabulate(table, headers="firstrow", tablefmt="grid"))
 
         return res
+    
+    def normalize(
+            self, 
+            X: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Normalize the input tensor X.
+        
+        Parameters:
+        X (torch.Tensor): The input tensor to be normalized.
+                          [m, d]
+        
+        Returns:
+        X_normalized (torch.Tensor): The normalized tensor.
+        """
+        return X / torch.norm(X, p=2, dim=1, keepdim=True)
+
+    def random_observation(
+            self,
+            length: int
+        ) -> torch.Tensor:
+        """
+        Generate two opposite observations on a random direction.
+        
+        Returns:
+        observation (torch.Tensor): The random observation.
+                                    [dim_sample]
+        """
+        X = torch.randn(
+            length, 
+            device=self.device
+        )
+        X = torch.stack(
+            [X, -X]
+        )
+        return self.normalize(X)

@@ -2,7 +2,7 @@ from typing import List, Tuple, Any
 import torch
 from torch.utils.data import Dataset
 
-class TransformedDataset(Dataset):
+class MultiLabelledDataset(Dataset):
     def __init__(
             self, 
             data: torch.Tensor, 
@@ -23,22 +23,20 @@ class TransformedDataset(Dataset):
                                 take the classifier(s) and the feature in the form of torch.Tensor as
                                 inputs, then outputs a label in the form of torch.Tensor.
         """
-        self.data = data
+        self.data: torch.Tensor = data
 
         if shuffle:
             if random_state:
-                self.data = data[
+                self.data: torch.Tensor = data[
                     torch.randperm(
                         data.size(0), 
                         generator=torch.Generator().manual_seed(random_state)
                     )
                 ]
             else:
-                self.data = data[torch.randperm(data.size(0))]
+                self.data: torch.Tensor = data[torch.randperm(data.size(0))]
             
-        self.trans_labels = None
-        self.predictor = predictor
-        self.label_map()
+        self.label_to_errors(predictor)
         self.device = data.device
 
     def __len__(self) -> int:
@@ -50,27 +48,29 @@ class TransformedDataset(Dataset):
         ) -> tuple[torch.Tensor, torch.Tensor]:
         return self.trans_labels[idx], self.data[idx, 1:]
     
-    def dim(self) -> torch.Tensor:
+    def dim_feature(self) -> torch.Tensor:
         return self.data.size(1) - 1
     
-    def label_map(self) -> None:
+    def dim_label(self) -> torch.Tensor:
+        if len(self.trans_labels.size()) == 1:
+            return 1
+        else:
+            return self.trans_labels.size(1)
+    
+    def label_to_errors(
+            self,
+            predictor: Any
+    ) -> None:
         """
         Map the labels according to the given predictor.
         """
-        if self.predictor and hasattr(self.predictor, 'errors'):
-            self.trans_labels = self.predictor.errors(
+        if predictor and hasattr(predictor, 'errors'):
+            self.trans_labels = predictor.errors(
                 X=self.data[:, 1:],     # [data_batch_size, dim_sample]
                 y=self.data[:, 0]       # [data_batch_size]
             ).t()                       # [data_batch_size, cluster_size]
         else:
             self.trans_labels = self.data[:, 0].bool()
-    
-    def set_predictor(
-            self,
-            predictor: Any
-    ):
-        self.predictor = predictor
-        self.label_map()
 
 class FixedIterationLoader:
     def __init__(self, dataloader, max_iterations):

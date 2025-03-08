@@ -9,7 +9,7 @@ from tabulate import tabulate
 from torch.utils.data import DataLoader, random_split
 from ..utils.data import TransformedDataset
 from ..utils.simple_models import ConditionalLinearModel, PredictiveModel
-from ..models.cpgd import SelectorPerceptron
+from ..models.optimizers import SelectorPerceptron
 
 class ExperimentBaseline(nn.Module):
     """

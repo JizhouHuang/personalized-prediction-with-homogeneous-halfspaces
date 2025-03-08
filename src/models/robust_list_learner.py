@@ -3,8 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import math
 from typing import List
-from ..utils.simple_models import LinearModel, ConditionalLinearModel
-from tqdm import tqdm
+from ..utils.simple_models import LinearModel
 
 class RobustListLearner(nn.Module):
     """
@@ -32,7 +31,7 @@ class RobustListLearner(nn.Module):
     def forward(
             self, 
             dataset: DataLoader
-    ) -> List[ConditionalLinearModel]:
+    ) -> List[LinearModel]:
         """
         Perform robust list learning as specified by the algorithm in Appendix A.
         
@@ -41,7 +40,7 @@ class RobustListLearner(nn.Module):
                                            The first column is the label, which takes values in {0, 1}.
         
         Returns:
-        sparse_weight_list (list[ConditionalLinearModel]): The list of weights for each combination.
+        sparse_weight_list (list[LinearModel]): The list of weights for each combination.
                                            The weight_list is represented as a sparse tensor.
                                            The order of the weight vectors in the list is the same as the following two loops:
                                            for features in feature_combinations:
@@ -157,7 +156,7 @@ class RobustListLearner(nn.Module):
             self,
             weights: torch.Tensor,
             feature_combinations: torch.Tensor
-    ) -> List[ConditionalLinearModel]:
+    ) -> List[LinearModel]:
 
         col_indices = feature_combinations.repeat_interleave(
             self.num_sample_combinations,
@@ -205,7 +204,7 @@ class RobustListLearner(nn.Module):
             row_indices: torch.Tensor,
             col_indices: torch.Tensor,
             weight_slice: torch.Tensor
-    ) -> ConditionalLinearModel:
+    ) -> LinearModel:
 
         indices = torch.stack(
             (
@@ -216,15 +215,12 @@ class RobustListLearner(nn.Module):
         size = torch.Size(
             [weight_slice.shape[0], self.sample_dim]
         )
-        return ConditionalLinearModel(
-            predictor=LinearModel(
-                weights=torch.sparse_coo_tensor(
-                    indices,
-                    weight_slice.flatten(),
-                    size
-                )
-            ),
-            device=self.device
+        return LinearModel(
+            weights=torch.sparse_coo_tensor(
+                indices,
+                weight_slice.flatten(),
+                size
+            )
         )
 
     # verification function

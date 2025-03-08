@@ -59,11 +59,10 @@ def main(data_name: str):
         )
 
         # Record the result error measures
-        sparse_errs.append(res[0][1])
-        cond_errs_wo.append(res[1][1])
-        cond_errs.append(res[2][1][0]) 
-        coverages.append(res[2][1][1])
-        cond_svm_errs.append(res[3][1][0])
+        sparse_errs.append(res[0])
+        cond_errs_wo.append(res[1])
+        cond_errs.append(res[2]) 
+        coverages.append(res[3])
 
         print(f"{header} printing error statistics ...")
         # Print the results in a table format
@@ -71,16 +70,15 @@ def main(data_name: str):
             ["Classifier Type", "Data", "Trials", "Min ER", "Min Cover", "Med ER", "Med Cover", "95th ER", "95th Cover", "Avg ER", "Avg Cover", "ER std", "95th Avg ER", "95th Avg Cover"],
             get_statistics("Classic Sparse", data_name, eid + 1, torch.tensor(sparse_errs, dtype=torch.float32, device=device)),
             get_statistics("Cond Sparse w/o Selector", data_name, eid + 1, torch.tensor(cond_errs_wo, dtype=torch.float32, device=device)),
-            get_statistics("Cond Sparse", data_name, eid + 1, torch.tensor(cond_errs, dtype=torch.float32, device=device), torch.tensor(coverages, dtype=torch.float32, device=device)),
-            get_statistics("Cond SVM", data_name, eid + 1, torch.tensor(cond_svm_errs, dtype=torch.float32, device=device), torch.tensor(coverages, dtype=torch.float32, device=device))
+            get_statistics("Cond Sparse", data_name, eid + 1, torch.tensor(cond_errs, dtype=torch.float32, device=device), torch.tensor(coverages, dtype=torch.float32, device=device))
         ]
         print(tabulate(table, headers="firstrow", tablefmt="grid"))
     
-        data_store = [sparse_errs, cond_errs_wo, cond_errs, cond_svm_errs, coverages]
-        rows = ["Classic Sparse ER", "Cond Sparse ER w/o Selector", "Cond Sparse ER", "Cond SVM ER", "Coverage"]
-        df = pd.DataFrame(data_store, index=rows)
-        # df.to_csv("src/log/raw_" + data_name + ".csv", index=True)
-        df.to_csv("src/log/raw_" + data_name + "_3" + ".csv", index=True)
+        # data_store = [sparse_errs, cond_errs_wo, cond_errs, cond_svm_errs, coverages]
+        # rows = ["Classic Sparse ER", "Cond Sparse ER w/o Selector", "Cond Sparse ER", "Cond SVM ER", "Coverage"]
+        # df = pd.DataFrame(data_store, index=rows)
+        # # df.to_csv("src/log/raw_" + data_name + ".csv", index=True)
+        # df.to_csv("src/log/raw_" + data_name + "_3" + ".csv", index=True)
         
 
     
