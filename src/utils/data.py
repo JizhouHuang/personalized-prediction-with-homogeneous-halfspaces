@@ -1,14 +1,12 @@
-from typing import List, Tuple, Any
+from typing import Any, Self, Tuple
 import torch
 from torch.utils.data import Dataset
 
-class MultiLabelledDataset(Dataset):
+class MultiLabeledDataset(Dataset):
     def __init__(
             self, 
             data: torch.Tensor, 
-            predictor: Any = None,
-            shuffle: bool = True,
-            random_state: int = None
+            predictor: Any = None
         ):
         """
         Initialize the dataset with a label mapping.
@@ -24,18 +22,6 @@ class MultiLabelledDataset(Dataset):
                                 inputs, then outputs a label in the form of torch.Tensor.
         """
         self.data: torch.Tensor = data
-
-        if shuffle:
-            if random_state:
-                self.data: torch.Tensor = data[
-                    torch.randperm(
-                        data.size(0), 
-                        generator=torch.Generator().manual_seed(random_state)
-                    )
-                ]
-            else:
-                self.data: torch.Tensor = data[torch.randperm(data.size(0))]
-            
         self.label_to_errors(predictor)
         self.device = data.device
 
@@ -45,17 +31,73 @@ class MultiLabelledDataset(Dataset):
     def __getitem__(
             self, 
             idx: int
-        ) -> tuple[torch.Tensor, torch.Tensor]:
-        return self.trans_labels[idx], self.data[idx, 1:]
+        ) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self.trans_labels[idx].t(), self.data[idx, 1:]
     
-    def dim_feature(self) -> torch.Tensor:
+    def decouple(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self.trans_labels, self.data[:, 1:]
+    
+    def features(self) -> torch.Tensor:
+        return self.data[:, 1:]
+    
+    def labels(self) -> torch.Tensor:
+        return self.trans_labels
+    
+    def num_features(self) -> int:
         return self.data.size(1) - 1
     
-    def dim_label(self) -> torch.Tensor:
+    def size_feature(
+            self,
+            dim: int = -1
+    ) -> Tuple[int, torch.Size]:
+        if dim < 0:
+            return torch.Size([self.data.size(0), self.num_features()])
+        elif dim == 0:
+            return self.data.size(0)
+        else:
+            return self.num_features()
+    
+    def num_labels(self) -> int:
         if len(self.trans_labels.size()) == 1:
             return 1
         else:
             return self.trans_labels.size(1)
+        
+    def size_label(
+            self,
+            dim: int = -1
+    ) -> Tuple[int, torch.Size]:
+        if dim < 0:
+            return self.trans_labels.size()
+        return self.trans_labels.size(dim)
+    
+    def label_with(
+            self,
+            predictor: Any
+    ) -> Self:
+        return MultiLabeledDataset(
+            data=self.data,
+            predictor=predictor
+        )
+    
+    def random_subset(
+            self,
+            subset_size: int,
+            random_state: int = None
+    ) -> Self:
+        if random_state is not None:
+            data_perm = self.data[
+                torch.randperm(
+                    self.data.size(0), 
+                    generator=torch.Generator().manual_seed(random_state)
+                )
+            ]
+        else:
+            data_perm = self.data[torch.randperm(data.size(0))]
+        return MultiLabeledDataset(
+            data=data_perm[:min(subset_size, data_perm.size(0))],
+            predictor=self.predictor
+        )
     
     def label_to_errors(
             self,
@@ -64,11 +106,12 @@ class MultiLabelledDataset(Dataset):
         """
         Map the labels according to the given predictor.
         """
+        self.predictor = predictor
         if predictor and hasattr(predictor, 'errors'):
             self.trans_labels = predictor.errors(
                 X=self.data[:, 1:],     # [data_batch_size, dim_sample]
                 y=self.data[:, 0]       # [data_batch_size]
-            ).t()                       # [data_batch_size, cluster_size]
+            ).t()                       # [data_batch_size, num predictors]
         else:
             self.trans_labels = self.data[:, 0].bool()
 

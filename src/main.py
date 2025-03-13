@@ -6,7 +6,7 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 from tabulate import tabulate
-from .experiments.experiment import ExperimentCCSC
+from .models.personalized_predictor import PersonalizedPredictor
 
 def main(data_name: str):
 
@@ -42,10 +42,12 @@ def main(data_name: str):
         dtype=torch.float32
     ).to(device)
 
-    for eid in tqdm(range(num_experiment),desc=" ".join([header, "running experiments"])):
-    # for eid in range(num_experiment):
+    sparse_predictors = []
+
+    # for eid in tqdm(range(num_experiment), desc=" ".join([header, "running experiments"])):
+    for eid in range(num_experiment):
         # Initialize the experiment
-        experiment = ExperimentCCSC(
+        experiment = PersonalizedPredictor(
             prev_header=header + ">",
             experiment_id=eid, 
             config_file_path=config_file_path,
@@ -53,10 +55,11 @@ def main(data_name: str):
         )
 
         # Run the experiment
-        res = experiment(
+        res, sp = experiment(
             data_train,
             data_test
         )
+        sparse_predictors.append(sp)
 
         # Record the result error measures
         sparse_errs.append(res[0])
@@ -73,6 +76,10 @@ def main(data_name: str):
             get_statistics("Cond Sparse", data_name, eid + 1, torch.tensor(cond_errs, dtype=torch.float32, device=device), torch.tensor(coverages, dtype=torch.float32, device=device))
         ]
         print(tabulate(table, headers="firstrow", tablefmt="grid"))
+
+    print(f"{header} sparse predictors sizes are {sparse_predictors[0].size()}, {sparse_predictors[1].size()}")
+    print(f"{header} sparse predictors norms are {torch.norm(sparse_predictors[0].weights)}, {torch.norm(sparse_predictors[1].weights)}")
+    print(f"{header} sparse predictors diff is {torch.norm(sparse_predictors[0].weights - sparse_predictors[1].weights)}")
     
         # data_store = [sparse_errs, cond_errs_wo, cond_errs, cond_svm_errs, coverages]
         # rows = ["Classic Sparse ER", "Cond Sparse ER w/o Selector", "Cond Sparse ER", "Cond SVM ER", "Coverage"]

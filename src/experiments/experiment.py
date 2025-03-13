@@ -6,8 +6,8 @@ from tqdm import tqdm
 from tabulate import tabulate
 from torch.utils.data import DataLoader
 from ..utils.data import MultiLabelledDataset
-from ..models.reference_class import ReferenceClass
-from ..models.robust_list_learner import RobustListLearner
+from ..models.conditional_predictor import ReferenceClass
+from ..models.robust_predictor import RobustListLearner
 from ..models.baseline_learner import SVMLearner
 from ..utils.simple_models import LinearModel
 
@@ -107,38 +107,22 @@ class ExperimentCCSC(nn.Module):
         print(" ".join([self.header, "initializing conditional classification learner for homogeneous halfspaces ..."]))
         conditional_learner = ReferenceClass(
             prev_header=self.header + ">",
-            dataset = MultiLabelledDataset(
-                data=data_train,
-                predictor=sparse_classifier_clusters[0]
-            ),
             subset_fracs=self.train_subset_fracs, 
             num_iter=self.num_iter, 
             lr=self.lr, 
             device=self.device
         )
 
-        # generate random observations
-        observations = self.random_observation(
-            length=data_train.size(-1) - 1
-        )   # [2, dim sample]
-
-        # repeat observation interleavely to match the number of predictors,
-        # and wrap it into a linear model
-        observations=observations.unsqueeze(1).repeat(
-            1,
-            sparse_classifier_clusters[0].size(0), 
-            1
-        )   # [num observations, num predictors, dim sample]
-
-        print(f"{self.header} observations size: {observations.size()}\n")
-
         # learn reference class with label mapping
         eval_errors, eval_ids, selectors = conditional_learner(
-            observations=observations,
+            dataset = MultiLabelledDataset(
+                data=data_train,
+                predictor=sparse_classifier_clusters[0]
+            )
         )   # Tuple[torch.Tensor, torch.Tensor, LinearModel]
 
         print(f"{self.header} learned selectors (after selecting) size: {selectors.size()}\n")
-        
+
         init_weights_ids = torch.argmin(eval_errors)
         predictor: LinearModel = sparse_classifier_clusters[0].reduce(eval_ids[init_weights_ids])
         selectors: LinearModel = selectors.reduce(init_weights_ids)

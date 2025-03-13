@@ -1,8 +1,8 @@
-num_sample_rll: 16
+num_sample_rll: 64
 margin: 0.0001
-sparsity: 2
-cluster_size: 65536
-train_subset_fracs: [0.4]
-lr: 0.01
-num_iter: 256
+sparsity: 3
+sample_complexity: 5000000
+train_subset_fracs: [0.67]
+lr: 0.08
+num_iter: 1024
 batch_size: 64
