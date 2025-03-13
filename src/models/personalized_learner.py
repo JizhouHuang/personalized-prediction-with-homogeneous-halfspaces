@@ -3,19 +3,17 @@ import torch.nn as nn
 import itertools
 import yaml
 import math
-from typing import Union, Tuple, List, Iterable
+from typing import Union, Tuple, Iterable
 from tqdm import tqdm
 from tabulate import tabulate
-from torch.utils.data import DataLoader, Subset, random_split
+from torch.utils.data import random_split
 from ..utils.data import MultiLabeledDataset
-from .conditional_predictor import ConditionalPredictor
-from .reference_class import ReferenceClass
-from .robust_predictor import SparseLinearPredictor
-from .baseline_learner import SVMLearner
+from .selector_learner import SelectiveHalfspaceLearner, ReferenceClassLearner
+from .predictor_learner import RobustSparseHalfspaceLearner
 from ..utils.simple_models import LinearModel
 
 
-class PersonalizedPredictor(nn.Module):
+class PersonalizedPredictorLeaner(nn.Module):
     """
     Personalized predictor.
     """
@@ -44,7 +42,7 @@ class PersonalizedPredictor(nn.Module):
         num_iter:           The number of iteration for PSGD to run.
         batch_size:         Number of example to estimate the expectation of projected gradient in each gradient step.
         """
-        super(PersonalizedPredictor, self).__init__()
+        super(PersonalizedPredictorLeaner, self).__init__()
         self.header = " ".join([prev_header, "experiment", str(experiment_id), "-"])
         self.device = device
 
@@ -65,14 +63,14 @@ class PersonalizedPredictor(nn.Module):
 
         print(" ".join([self.header, "initializing learners ..."]))
 
-        self.predictor_learner = SparseLinearPredictor(
+        self.predictor_learner = RobustSparseHalfspaceLearner(
             prev_header=self.header + ">",
             sparsity=self.sparsity, 
             margin=self.margin,
             device=self.device
         )
 
-        self.selector_learner = ConditionalPredictor(
+        self.selector_learner = SelectiveHalfspaceLearner(
             prev_header=self.header + ">",
             subset_fracs=self.train_subset_fracs, 
             num_iter=self.num_iter, 
@@ -80,7 +78,7 @@ class PersonalizedPredictor(nn.Module):
             device=self.device
         )
 
-        self.restricted_selector_learner = ReferenceClass(
+        self.restricted_selector_learner = ReferenceClassLearner(
             prev_header=self.header + ">",
             subset_fracs=self.train_subset_fracs, 
             num_iter=self.num_iter, 
@@ -170,8 +168,8 @@ class PersonalizedPredictor(nn.Module):
     def subroutine(
             self,
             dataset: MultiLabeledDataset,
-            predictor_learner: SparseLinearPredictor,
-            selector_learner: Union[ConditionalPredictor, ReferenceClass],
+            predictor_learner: RobustSparseHalfspaceLearner,
+            selector_learner: Union[SelectiveHalfspaceLearner, ReferenceClassLearner],
             observations: torch.Tensor,
             desc: str = None
     ) -> Tuple[LinearModel, torch.Tensor, LinearModel, LinearModel]:
@@ -267,27 +265,22 @@ class PersonalizedPredictor(nn.Module):
             selector: LinearModel
     ) -> torch.Tensor:
         
-        labels, features = dataset[:]
-
         error = sparse_predictor.error_rate(
-            y=labels,
-            X=features
+            *dataset[:]
         )
         # Estimate error measures with selectors
         error_wo = predictor.error_rate(
-            y=labels,
-            X=features
+            *dataset[:]
         )
 
         # map the labels in test data according to the selected predictor
-        labels_test, features_test = dataset.label_with(predictor)[:]
-
         cond_error = selector.conditional_one_rate(
-            y=labels_test,
-            X=features_test
+            *dataset.label_with(predictor)[:]
         )     
 
-        coverage = selector.prediction_rate(X=features_test)
+        coverage = selector.prediction_rate(
+            X=dataset.features()
+        )
 
         return torch.tensor(
             [

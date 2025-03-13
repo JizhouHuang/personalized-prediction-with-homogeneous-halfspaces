@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import Subset
 import math
-from typing import List
+from typing import Union
 from ..utils.simple_models import LinearModel
 from ..utils.data import MultiLabeledDataset
 
-class SparseLinearPredictor(nn.Module):
+class RobustSparseHalfspaceLearner(nn.Module):
     """
     Robust List Classification for Sparse Classes
     """
@@ -22,7 +22,7 @@ class SparseLinearPredictor(nn.Module):
         sparsity (int):           The degree for each combination.
         margin (int):             The margin to use for the robust list learning.
         """
-        super(SparseLinearPredictor, self).__init__()
+        super(RobustSparseHalfspaceLearner, self).__init__()
         self.header = " ".join([prev_header, "robust list learner", "-"])
         self.sparsity = sparsity
         self.margin = margin
@@ -31,7 +31,7 @@ class SparseLinearPredictor(nn.Module):
 
     def forward(
             self, 
-            dataset: MultiLabeledDataset,
+            dataset: Union[MultiLabeledDataset, Subset],
             prev_sample_indices: torch.Tensor,
             prev_feature_indices: torch.Tensor
     ) -> LinearModel:
@@ -51,7 +51,6 @@ class SparseLinearPredictor(nn.Module):
                                                     ...
         """
         
-
         # Extract features and labels
         # Assume the first column is the label column
         labels, features = dataset[:]

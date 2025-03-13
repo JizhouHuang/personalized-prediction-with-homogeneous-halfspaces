@@ -6,9 +6,12 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 from tabulate import tabulate
-from .models.personalized_predictor import PersonalizedPredictor
+from .models.personalized_learner import PersonalizedPredictorLeaner
 
-def main(data_name: str):
+def main(
+        data_name: str,
+        num_experiment: int
+):
 
     # Check if GPU is available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -23,7 +26,6 @@ def main(data_name: str):
     config_file_path = "".join(["src/config/model/", data_name, ".yaml"])
     config_file_path = "src/config/model/model_toy.yaml"
 
-    num_experiment = 2
     sparse_errs = []
     cond_errs_wo = []
     cond_errs = []
@@ -47,7 +49,7 @@ def main(data_name: str):
     # for eid in tqdm(range(num_experiment), desc=" ".join([header, "running experiments"])):
     for eid in range(num_experiment):
         # Initialize the experiment
-        experiment = PersonalizedPredictor(
+        experiment = PersonalizedPredictorLeaner(
             prev_header=header + ">",
             experiment_id=eid, 
             config_file_path=config_file_path,
@@ -148,6 +150,7 @@ def get_statistics(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the data analysis project.")
     parser.add_argument('--data_name', type=str, required=True, help='Name of the dataset to use.')
+    parser.add_argument('--num_exp', type=int, default=2, required=False, help='Name of the dataset to use.')
 
     args = parser.parse_args()
-    main(args.data_name)
+    main(args.data_name, args.num_exp)
