@@ -32,8 +32,8 @@ class RobustSparseHalfspaceLearner(nn.Module):
     def forward(
             self, 
             dataset: Union[MultiLabeledDataset, Subset],
-            prev_sample_indices: torch.Tensor,
-            prev_feature_indices: torch.Tensor
+            prev_sample_indices: torch.Tensor,  # int tensor
+            prev_feature_indices: torch.Tensor  # int tensor
     ) -> LinearModel:
         """
         Perform robust list learning as specified by the algorithm in Appendix A.
@@ -149,7 +149,9 @@ class RobustSparseHalfspaceLearner(nn.Module):
 
         # check for speical case
         if valid_indices.size(0) <= degree:
-            return torch.cat((prev_indices, valid_indices))
+            return torch.cat(
+                (prev_indices, valid_indices)
+            ).unsqueeze(0)
         
         # Generate combinations of samples
         partial_combinations = torch.combinations(

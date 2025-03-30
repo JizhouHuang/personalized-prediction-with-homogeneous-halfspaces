@@ -311,8 +311,11 @@ class PersonalizedPredictorLeaner(nn.Module):
         closest_num_feature_prefix = 0
         closest_num = 0
 
-        for num_sp in range(min(self.sparsity, num_sample)):
-            for num_fp in range(min(self.sparsity, num_feature)):
+        num_fp_max = min(self.sparsity, num_feature)
+        if self.sparsity > num_feature // 2:
+            num_fp_max = 1
+        for num_fp in range(num_fp_max):
+            for num_sp in range(min(self.sparsity, num_sample)):
                 num_sample_comb = math.comb(
                     num_sample,
                     self.sparsity - num_sp
@@ -360,8 +363,16 @@ class PersonalizedPredictorLeaner(nn.Module):
                 deg_feature
             ):
                 yield (
-                    torch.tensor(sample_comb, device=self.device),
-                    torch.tensor(feature_comb, device=self.device)
+                    torch.tensor(
+                        sample_comb, 
+                        device=self.device,
+                        dtype=torch.int
+                    ),
+                    torch.tensor(
+                        feature_comb, 
+                        device=self.device,
+                        dtype=torch.int
+                    )
                 )
         
     def normalize(
