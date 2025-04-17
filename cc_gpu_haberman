@@ -1,12 +1,12 @@
 #!/bin/bash
-#BSUB -o /home/research/jizhou.huang/projects/data-analysis-project/src/log/haberman.%J
+#BSUB -o /home/research/jizhou.huang/projects/personalized-prediction-with-homogeneous-halfspaces/src/log/haberman.%J
 #BSUB -u huang.jizhou@wustl.edu
 #BSUB -R 'select[type==any]'
 #BSUB -q gpu-compute
-#BSUB -gpu "num=1:mode=exclusive_process:gmodel=NVIDIAA40"
+#BSUB -gpu "num=4:mode=exclusive_process:gmodel=NVIDIAA40"
 #BSUB -a 'docker(hliucola/gracker)' /bin/true
 #BSUB -N
 #BSUB -W 100:00
-#BSUB -J cc_haberman
+#BSUB -J pp_haberman
 #source ...
-python -m src.main --data_name haberman
+python -m src.main --data_name haberman --num_exp 100
