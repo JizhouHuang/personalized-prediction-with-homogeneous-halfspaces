@@ -236,9 +236,9 @@ class PersonalizedPredictorLeaner(nn.Module):
                 model=selectors
             )
 
-        print(f"{self.header} result predictor size: {min_predictors.size()}, is sparse? {min_predictors.weights.is_sparse}")
-        print(f"{self.header} reuslt selector size: {min_selectors.size()}, is sparse? {min_selectors.weights.is_sparse}")
-        print(f"{self.header} sparse predictors size {min_predictors.size()}")
+        # print(f"{self.header} result predictor size: {min_predictors.size()}, is sparse? {min_predictors.weights.is_sparse}")
+        # print(f"{self.header} reuslt selector size: {min_selectors.size()}, is sparse? {min_selectors.weights.is_sparse}")
+        # print(f"{self.header} sparse predictors size {min_predictors.size()}")
 
         return sparse_lm, min_cond_er, min_predictors, min_selectors
 
