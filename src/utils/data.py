@@ -58,10 +58,7 @@ class MultiLabeledDataset(Dataset):
             return self.num_features()
     
     def num_labels(self) -> int:
-        if len(self.trans_labels.size()) == 1:
-            return 1
-        else:
-            return self.trans_labels.size(1)
+        return self.trans_labels.size(-1)
         
     def size_label(
             self,

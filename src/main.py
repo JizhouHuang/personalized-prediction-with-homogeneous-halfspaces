@@ -24,7 +24,7 @@ def main(
     data_test_path = "".join(["src/data/csv/", data_name, "_test.csv"])
 
     config_file_path = "".join(["src/config/model/", data_name, ".yaml"])
-    # config_file_path = "src/config/model/model_toy.yaml"
+    config_file_path = "src/config/model/model_toy.yaml"
 
     sparse_errs = []
     cond_errs_wo = []
@@ -79,9 +79,8 @@ def main(
         ]
         print(tabulate(table, headers="firstrow", tablefmt="grid"))
 
-    print(f"{header} sparse predictors sizes are {sparse_predictors[0].size()}, {sparse_predictors[1].size()}")
-    print(f"{header} sparse predictors norms are {torch.norm(sparse_predictors[0].weights)}, {torch.norm(sparse_predictors[1].weights)}")
-    print(f"{header} sparse predictors diff is {torch.norm(sparse_predictors[0].weights - sparse_predictors[1].weights)}")
+    # print(f"{header} sparse predictors sizes are {sparse_predictors[0].size()}, {sparse_predictors[1].size()}")
+    # print(f"{header} sparse predictors diff is {torch.norm(sparse_predictors[0].weights - sparse_predictors[1].weights)}")
     
         # data_store = [sparse_errs, cond_errs_wo, cond_errs, cond_svm_errs, coverages]
         # rows = ["Classic Sparse ER", "Cond Sparse ER w/o Selector", "Cond Sparse ER", "Cond SVM ER", "Coverage"]
