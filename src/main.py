@@ -24,7 +24,7 @@ def main(
     data_test_path = "".join(["src/data/csv/", data_name, "_test.csv"])
 
     config_file_path = "".join(["src/config/model/", data_name, ".yaml"])
-    config_file_path = "src/config/model/model_toy.yaml"
+    # config_file_path = "src/config/model/model_toy.yaml"
 
     sparse_errs = []
     cond_errs_wo = []
