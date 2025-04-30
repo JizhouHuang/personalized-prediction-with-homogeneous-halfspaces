@@ -103,7 +103,13 @@ class PersonalizedPredictorLeaner(nn.Module):
         # general training data
         dataset_train = MultiLabeledDataset(data=data_train)
         # small subset of training data for robust list learning
-        dataset_train_rll = dataset_train.random_subset(subset_size=self.num_sample_rll)
+        if self.num_sample_rll > len(dataset_train):
+            self.num_sample_rll = len(dataset_train)
+            dataset_train_rll = dataset_train
+        else:
+            dataset_train_rll = dataset_train.random_subset(subset_size=self.num_sample_rll)
+        print(f"{self.header} dataset_train_rll size {len(dataset_train_rll)}, dataset_train size {len(dataset_train)}")
+            
 
         dataset_test = MultiLabeledDataset(data=data_test)
         
@@ -155,27 +161,26 @@ class PersonalizedPredictorLeaner(nn.Module):
             ]
         )
 
-        print(f"{self.header} errors shape {errors.size()}")
+        print(f"{self.header} errors shape {errors.size()}, number of test samples {data_test.size(0)}")
 
         error_rates = errors.sum()/errors.size(0)
 
         test_stats = self.oos_statistics(
             dataset=MultiLabeledDataset(data=data_test),
             sparse_predictor=sparse_lm,
-            predictor=predictor,
-            selector=selector
+            predictor=predictor
         )
 
         # Print the results in a table format
         table = [
-            ["Classifier Type", "Train Size", "Test Size", "Sample Dim", "Sparsity", "PSGD Iter", "LR Coeff", "Est ER", "Coverage"],
-            ["Classic Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.lr, test_stats[0], 1],
-            ["Cond Sparse w/o Selector", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.lr, test_stats[1], 1],
-            ["Cond Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.lr, error_rates, test_stats[3]]
+            ["Classifier Type", "Train Size", "Test Size", "Sample Dim", "Sparsity", "PSGD Iter", "LR Coeff", "Est ER"],
+            ["Classic Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.lr, test_stats[0]],
+            ["Cond Sparse w/o Selector", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.lr, test_stats[1]],
+            ["Cond Sparse", data_train.size(0), data_test.shape[0], data_test.shape[1] - 1, self.sparsity, self.num_iter, self.lr, error_rates]
         ]
         print(tabulate(table, headers="firstrow", tablefmt="grid"))
 
-        return test_stats, sparse_lm
+        return test_stats + [error_rates], sparse_lm
     
     def subroutine(
             self,
@@ -202,7 +207,7 @@ class PersonalizedPredictorLeaner(nn.Module):
             num_observation=observations.size(0),
             desc=desc
         ):
-            print(f"{self.header} selected sample indices {sample_indices}, selected feature indices {feature_indices}")
+            # print(f"{self.header} selected sample indices {sample_indices}, selected feature indices {feature_indices}")
             # learning sparse predictors
             predictors: LinearModel = predictor_learner(
                 dataset_train_rll, 
@@ -270,8 +275,7 @@ class PersonalizedPredictorLeaner(nn.Module):
             self,
             dataset: MultiLabeledDataset,
             sparse_predictor: LinearModel,
-            predictor: LinearModel,
-            selector: LinearModel
+            predictor: LinearModel
     ) -> torch.Tensor:
         
         error = sparse_predictor.error_rate(
@@ -282,23 +286,7 @@ class PersonalizedPredictorLeaner(nn.Module):
             *dataset[:]
         )
 
-        # map the labels in test data according to the selected predictor
-        cond_error = selector.conditional_one_rate(
-            *dataset.label_with(predictor)[:]
-        )     
-
-        coverage = selector.prediction_rate(
-            X=dataset.features()
-        )
-
-        return torch.tensor(
-            [
-                error,
-                error_wo,
-                cond_error, 
-                coverage
-            ]
-        )
+        return [error, error_wo]
 
     def prefix_combination_generator(
             self,
@@ -341,13 +329,13 @@ class PersonalizedPredictorLeaner(nn.Module):
                     self.sparsity - num_feature_prefix
                 )
                 total = num_sample_comb * num_feature_comb * num_observation * num_feature * num_sample
-                print(f"{self.header} sample comb {num_sample_comb}, feature comb {num_feature_comb}, observations {num_observation}, num feature {num_feature}, num sample {num_sample}, total {total}")
+                # print(f"{self.header} sample comb {num_sample_comb}, feature comb {num_feature_comb}, observations {num_observation}, num feature {num_feature}, num sample {num_sample}, total {total}")
                 
                 if closest_num < total <= self.sample_complexity:
                     closest_num_sample_prefix = num_sample_prefix
                     closest_num_feature_prefix = num_feature_prefix
                     closest_num = total
-                    print(f"{self.header} closest num sample {closest_num_sample_prefix}, closest num feature {closest_num_feature_prefix}, closest num {closest_num}")
+                    # print(f"{self.header} closest num sample {closest_num_sample_prefix}, closest num feature {closest_num_feature_prefix}, closest num {closest_num}")
 
         gen = self.two_level_combination_generator(
             num_sample=self.num_sample_rll,
