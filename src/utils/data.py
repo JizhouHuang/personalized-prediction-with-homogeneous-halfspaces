@@ -90,7 +90,7 @@ class MultiLabeledDataset(Dataset):
                 )
             ]
         else:
-            data_perm = self.data[torch.randperm(data.size(0))]
+            data_perm = self.data[torch.randperm(self.data.size(0))]
         return MultiLabeledDataset(
             data=data_perm[:min(subset_size, data_perm.size(0))],
             predictor=self.predictor
