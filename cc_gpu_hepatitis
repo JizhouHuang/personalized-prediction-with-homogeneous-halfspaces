@@ -9,4 +9,4 @@
 #BSUB -W 100:00
 #BSUB -J pp_hepatitis
 #source ...
-CUDA_LAUNCH_BLOCKING=1 python -m src.main --data_name hepatitis --num_exp 100
+python -m src.main --data_name hepatitis --num_exp 100
