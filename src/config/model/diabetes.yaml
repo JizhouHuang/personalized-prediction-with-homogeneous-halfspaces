@@ -1,4 +1,4 @@
-num_sample_rll: 256
+num_sample_rll: 512
 margin: 0.0001
 sparsity: 2
 sample_complexity: 17179869184
