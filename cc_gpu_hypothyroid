@@ -9,4 +9,4 @@
 #BSUB -W 100:00
 #BSUB -J pp_hypothyroid
 #source ...
-python -m src.main --data_name hypothyroid --num_exp 100
+python -m src.main --data_name hypothyroid --num_exp 1

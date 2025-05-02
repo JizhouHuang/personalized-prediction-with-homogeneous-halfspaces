@@ -24,7 +24,7 @@ def main(
     data_test_path = "".join(["src/data/csv/", data_name, "_test.csv"])
 
     config_file_path = "".join(["src/config/model/", data_name, ".yaml"])
-    # config_file_path = "src/config/model/model_toy.yaml"
+    config_file_path = "src/config/model/model_toy.yaml"
 
     sparse_errs = []
     cond_errs_wo = []
@@ -61,22 +61,22 @@ def main(
             data_train,
             data_test
         )
-        sparse_predictors.append(sp)
+        # sparse_predictors.append(sp)
 
-        # Record the result error measures
-        sparse_errs.append(res[0])
-        cond_errs_wo.append(res[1])
-        cond_errs.append(res[2]) 
+        # # Record the result error measures
+        # sparse_errs.append(res[0])
+        # cond_errs_wo.append(res[1])
+        # cond_errs.append(res[2]) 
 
-        print(f"{header} printing error statistics ...")
-        # Print the results in a table format
-        table = [
-            ["Classifier Type", "Data", "Trials", "Min ER", "Min Cover", "Med ER", "Med Cover", "95th ER", "95th Cover", "Avg ER", "Avg Cover", "ER std", "95th Avg ER"],
-            get_statistics("Classic Sparse", data_name, eid + 1, torch.tensor(sparse_errs, dtype=torch.float32, device=device)),
-            get_statistics("Cond Sparse w/o Selector", data_name, eid + 1, torch.tensor(cond_errs_wo, dtype=torch.float32, device=device)),
-            get_statistics("Cond Sparse", data_name, eid + 1, torch.tensor(cond_errs, dtype=torch.float32, device=device))
-        ]
-        print(tabulate(table, headers="firstrow", tablefmt="grid"))
+        # print(f"{header} printing error statistics ...")
+        # # Print the results in a table format
+        # table = [
+        #     ["Classifier Type", "Data", "Trials", "Min ER", "Min Cover", "Med ER", "Med Cover", "95th ER", "95th Cover", "Avg ER", "Avg Cover", "ER std", "95th Avg ER"],
+        #     get_statistics("Classic Sparse", data_name, eid + 1, torch.tensor(sparse_errs, dtype=torch.float32, device=device)),
+        #     get_statistics("Cond Sparse w/o Selector", data_name, eid + 1, torch.tensor(cond_errs_wo, dtype=torch.float32, device=device)),
+        #     get_statistics("Cond Sparse", data_name, eid + 1, torch.tensor(cond_errs, dtype=torch.float32, device=device))
+        # ]
+        # print(tabulate(table, headers="firstrow", tablefmt="grid"))
 
     # print(f"{header} sparse predictors sizes are {sparse_predictors[0].size()}, {sparse_predictors[1].size()}")
     # print(f"{header} sparse predictors diff is {torch.norm(sparse_predictors[0].weights - sparse_predictors[1].weights)}")
