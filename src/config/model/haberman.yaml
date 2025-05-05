@@ -2,6 +2,6 @@ num_sample_rll: 256
 margin: 0.0001
 sparsity: 2
 sample_complexity: 17179869184
-train_subset_fracs: [0.67]
+train_subset_fracs: [0.5, 0.25]
 lr: 0.01
-num_iter: 8192
+num_iter: 4096
