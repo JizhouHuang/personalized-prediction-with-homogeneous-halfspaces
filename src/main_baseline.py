@@ -67,7 +67,7 @@ def main(
         # sparse_predictors.append(sp)
 
         ### XGBoost
-        xgb_model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+        xgb_model = xgb.XGBClassifier(eval_metric='logloss')
         xgb_model.fit(X_train, y_train)
         print("XGBoost Accuracy:", 1 - accuracy_score(y_test, xgb_model.predict(X_test)))
 
