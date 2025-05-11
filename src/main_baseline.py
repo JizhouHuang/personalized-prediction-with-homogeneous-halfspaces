@@ -60,16 +60,16 @@ def main(
         svm_rbf.fit(X_train, y_train)
         print("SVM RBF Accuracy:", 1 - accuracy_score(y_test, svm_rbf.predict(X_test)))
 
+        ### XGBoost
+        xgb_model = xgb.XGBClassifier(eval_metric='logloss')
+        xgb_model.fit(X_train, y_train)
+        print("XGBoost Accuracy:", 1 - accuracy_score(y_test, xgb_model.predict(X_test)))
+
         ### Random Forest
         rf = RandomForestClassifier(n_estimators=100)
         rf.fit(X_train, y_train)
         print("Random Forest Accuracy:", 1 - accuracy_score(y_test, rf.predict(X_test)))
         # sparse_predictors.append(sp)
-
-        ### XGBoost
-        xgb_model = xgb.XGBClassifier(eval_metric='logloss')
-        xgb_model.fit(X_train, y_train)
-        print("XGBoost Accuracy:", 1 - accuracy_score(y_test, xgb_model.predict(X_test)))
 
         # # Record the result error measures
         # sparse_errs.append(res[0])
