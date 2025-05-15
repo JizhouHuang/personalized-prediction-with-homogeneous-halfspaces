@@ -274,3 +274,4 @@ class RobustSparseHalfspaceLearner(nn.Module):
                 i += 1
 
         print(f"{self.header} predictor norms are {torch.norm(predictors.weights)} and {torch.norm(weight_list)}, verification error {torch.norm(predictors.to_dense().weights - weight_list)}")
+
