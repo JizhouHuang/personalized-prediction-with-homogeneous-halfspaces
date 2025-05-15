@@ -22,17 +22,14 @@ data-analysis-project
    cd data-analysis-project
    ```
 
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
 ## Usage
 
 To run the data analysis application, execute the following command:
 ```
-python src/main.py
+python src/<experiment type>.py --data_name <dataset name> --num_exp <repeat number of the experiment>
 ```
+experiment type: main, main_sparse, main-baseline
+dataset name: haberman, diabetes, hepatitis, hypothyroid, wdbc
 
 ## Contributing
 
