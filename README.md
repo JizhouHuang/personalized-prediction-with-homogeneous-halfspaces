@@ -34,6 +34,8 @@ data-analysis-project
    cd personalized-prediction-with-homogeneous-halfspaces
    ```
 
+2. Install the packages listed in requirements.txt using either pip or conda.
+
 ## Usage
 
 To run the evaluation experiments, execute the following command:
