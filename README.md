@@ -1,17 +1,29 @@
 # Data Analysis Project
 
-This project is designed for data analysis and manipulation using Python libraries NumPy and Pandas. It provides a structured approach to load, clean, analyze, and summarize datasets.
+This project is designed for personalized prediction mainly using PyTorch.
 
 ## Project Structure
 
 ```
 data-analysis-project
 ├── src
-│   ├── main.py          # Entry point for the application
+│   ├── main.py                      # evaluation of personalized predictor
+│   ├── main_sparse.py               # evaluation of sparse predictor
+│   ├── main_baseline.py             # evaluation of other standard machine learning models
+│   ├── config
+│   │   ├── data                     # datasets information
+│   │   └── model                    # personalized and sparse model hyperparameters for different datasets
+│   ├── data                         # UCI data files
+│   ├── models
+│   │   ├── baseline_learner.py      # learning algorithms for logistic regression, SVM, XGBoost, random forest
+│   │   ├── predictor_learner.py     # robust list learning algorithm for sparse linear classifiers
+│   │   ├── selector_learner.py      # projected gradient descent for learning homogeneous halfspace subsets
+│   │   └── personalized_learner.py  # personalized prediction scheme
 │   └── utils
-│       └── helpers.py   # Utility functions for data processing
-├── requirements.txt     # Project dependencies
-└── README.md            # Project documentation
+│       ├── data.py                  # data structures
+│       └── simple_models.py         # custom linear predictive model
+├── requirements.txt                 # Project dependencies
+└── README.md                        # Project documentation
 ```
 
 ## Setup Instructions
@@ -29,7 +41,7 @@ To run the evaluation experiments, execute the following command:
 python -m src.<experiment type>.py --data_name <dataset name> --num_exp <repeat number of the experiment>
 ```
 
-experiment type: main, main_sparse, main-baseline
+experiment type: main, main_sparse, main_baseline
 
 dataset name: haberman, diabetes, hepatitis, hypothyroid, wdbc
 
