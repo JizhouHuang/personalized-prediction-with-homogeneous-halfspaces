@@ -19,14 +19,14 @@ data-analysis-project
 1. Clone the repository:
    ```
    git clone <repository-url>
-   cd data-analysis-project
+   cd personalized-prediction-with-homogeneous-halfspaces
    ```
 
 ## Usage
 
-To run the data analysis application, execute the following command:
+To run the evaluation experiments, execute the following command:
 ```
-python src/<experiment type>.py --data_name <dataset name> --num_exp <repeat number of the experiment>
+python -m src.<experiment type>.py --data_name <dataset name> --num_exp <repeat number of the experiment>
 ```
 
 experiment type: main, main_sparse, main-baseline
