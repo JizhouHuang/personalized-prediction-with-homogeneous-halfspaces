@@ -33,6 +33,11 @@ experiment type: main, main_sparse, main-baseline
 
 dataset name: haberman, diabetes, hepatitis, hypothyroid, wdbc
 
+
+For fast-run uncomment 
+``` config_file_path = "src/config/model/model_toy.yaml```
+in ```src/main.py```
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or features.
