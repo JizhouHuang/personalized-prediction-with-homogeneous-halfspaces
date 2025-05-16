@@ -1,4 +1,4 @@
-# Data Analysis Project
+# Personalized Prediction
 
 This project is designed for personalized prediction mainly using PyTorch.
 
