@@ -13,7 +13,7 @@ data-analysis-project
 │   ├── config
 │   │   ├── data                     # datasets information
 │   │   └── model                    # personalized and sparse model hyperparameters for different datasets
-│   ├── data                         # UCI data files
+│   ├── data                         # UCI data files and preprocessing methods
 │   ├── models
 │   │   ├── baseline_learner.py      # learning algorithms for logistic regression, SVM, XGBoost, random forest
 │   │   ├── predictor_learner.py     # robust list learning algorithm for sparse linear classifiers
