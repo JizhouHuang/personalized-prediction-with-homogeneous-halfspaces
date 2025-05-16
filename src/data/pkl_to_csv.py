@@ -1,6 +1,6 @@
 import pandas as pd
 
-data_names = ["CSDS1", "CSDS2", "CSDS3", "GiveMe", "lending", "lendingNOH", "UCI_credit", "diabetes", "haberman", "hepatitis", "hypothyroid", "wdbc"]
+data_names = ["diabetes", "haberman", "hepatitis", "hypothyroid", "wdbc"]
 data_types = ["train", "test"]
 posfix_src = ".pkl"
 posfix_dst = ".csv"
