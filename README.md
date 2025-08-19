@@ -40,12 +40,12 @@ data-analysis-project
 
 To run the evaluation experiments, execute the following command:
 ```
-python -m src.<experiment type>.py --data_name <dataset name> --num_exp <repeat number of the experiment>
+python -m src.<experiment type> --data_name <dataset name> --num_exp <repeat number of the experiment>
 ```
 
-experiment type: main, main_sparse, main_baseline
+experiment type: `main`, `main_sparse`, `main_baseline`
 
-dataset name: haberman, diabetes, hepatitis, hypothyroid, wdbc
+dataset name: `haberman`, `diabetes`, `hepatitis`, `hypothyroid`, `wdbc`
 
 
 Note: for fast run, uncomment 
